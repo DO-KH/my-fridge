@@ -1,9 +1,12 @@
 import { create } from "zustand";
 
-// 로컬에서 설정 가져오기
+// ✅ 로컬에서 설정 가져오기 (SSR-safe)
 const getInitialNotificationSetting = () => {
-  const savedSetting = localStorage.getItem("isNotificationEnabled");
-  return savedSetting ? JSON.parse(savedSetting) : true;
+  if (typeof window !== "undefined") {
+    const savedSetting = localStorage.getItem("isNotificationEnabled");
+    return savedSetting ? JSON.parse(savedSetting) : true;
+  }
+  return true; // SSR 시에는 기본값 true로 설정
 };
 
 interface NotificationStore {
@@ -20,29 +23,38 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
 
   addNotification: (message) => {
     set((state) => {
-      // ✅ 중복 알림 방지
-      if (state.notifications.includes(message)) {
-        return state;
-      }
+      if (state.notifications.includes(message)) return state;
       return { notifications: [...state.notifications, message] };
     });
 
-    // ✅ 5초 후 자동 제거
-    setTimeout(() => {
-      set((state) => ({
-        notifications: state.notifications.filter((n) => n !== message),
-      }));
-    }, 5000);
+    // ✅ CSR에서만 setTimeout 실행
+    if (typeof window !== "undefined") {
+      setTimeout(() => {
+        set((state) => ({
+          notifications: state.notifications.filter((n) => n !== message),
+        }));
+      }, 5000);
+    }
   },
+
   removeNotification: (message) => {
     set((state) => ({
       notifications: state.notifications.filter((n) => n !== message),
     }));
   },
+
   toggleNotification: () => {
     set((state) => {
       const newSetting = !state.isNotificationEnabled;
-      localStorage.setItem("isNotificationEnabled", JSON.stringify(newSetting));
+
+      // ✅ CSR에서만 localStorage 반영
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "isNotificationEnabled",
+          JSON.stringify(newSetting)
+        );
+      }
+
       return { isNotificationEnabled: newSetting };
     });
   },

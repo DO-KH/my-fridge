@@ -1,14 +1,17 @@
 import { Route, Routes } from "react-router-dom";
 import "./App.css";
 import GlobalLayout from "./components/GlobalLayout";
-import Home from "./Home";
-import Items from "./items";
-import AddItem from "./add-item";
+import Home from "./pages/Home";
+import Items from "./pages/items";
+import AddItem from "./pages/add-item";
 import Settings from "./settings";
-import AuthPage from "./AuthPage";
+import AuthPage from "./pages/AuthPage";
+import pkg from 'react-router-dom';
 
+console.log('✅ react-router-dom keys:', Object.keys(pkg));
+console.log('✅ useLocation:', typeof pkg.useLocation);
 
-function App() {
+export function App() {
   return (
       <GlobalLayout>
         <Routes>

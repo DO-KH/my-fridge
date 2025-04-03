@@ -1,13 +1,6 @@
-const API_URL = "http://localhost:5000/api/items";
+import { Item } from "@/types/item";
 
-export interface Item {
-  id: number;
-  name: string;
-  quantity: number;
-  expiryDate?: string;
-  receivingDate: string;
-  category: string;
-}
+const API_URL = "http://localhost:5000/api/items";
 
 export const fetchItems = async (username: string): Promise<Item[]> => {
   const res = await fetch(`${API_URL}?username=${encodeURIComponent(username)}`, {

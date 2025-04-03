@@ -8,7 +8,7 @@ export default function Sidebar() {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  // ✅ 체크박스 선택/해제 핸들러
+  // 체크박스 선택/해제 핸들러
   const handleCategoryChange = (category: string) => {
     setSelectedCategories((prev) =>
       prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]

@@ -1,18 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchRegister } from "./api/auth/fetch-register";
-import { Lock, User, Mail } from "lucide-react"; // ✅ 아이콘 추가
-import { useAuthStore } from "./store/useAuthStore";
+import { fetchRegister } from "@/api/auth/fetch-register";
+import { Lock, User, Mail } from "lucide-react";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState(localStorage.getItem("savedEmail") || "");
+  const [email, setEmail] = useState(""); // 초기에는 빈 문자열
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const { login } = useAuthStore();
-
   const navigate = useNavigate();
+
+  // ✅ CSR 환경에서만 localStorage 접근
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("savedEmail");
+      if (saved) setEmail(saved);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,18 +29,20 @@ export default function AuthPage() {
         await login(email, password);
       } else {
         await fetchRegister(email, password, name);
-        alert("🎉 회원가입 성공! 로그인 해주세요.");
+        alert("회원가입 성공! 로그인 해주세요.");
         setIsLogin(true);
         return;
       }
 
-      if (rememberMe) localStorage.setItem("savedEmail", email);
-      else localStorage.removeItem("savedEmail");
+      if (typeof window !== "undefined") {
+        if (rememberMe) localStorage.setItem("savedEmail", email);
+        else localStorage.removeItem("savedEmail");
+      }
 
-      navigate("/"); // ✅ 로그인 후 메인 페이지로 이동
+      navigate("/");
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(`❌ 오류 발생: ${error.message}`);
+        alert(`오류 발생: ${error.message}`);
       }
     }
   };
@@ -46,7 +55,6 @@ export default function AuthPage() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ✅ 회원가입 시 이름 입력 */}
           {!isLogin && (
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -61,7 +69,6 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* ✅ 이메일 입력 */}
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -74,7 +81,6 @@ export default function AuthPage() {
             />
           </div>
 
-          {/* ✅ 비밀번호 입력 */}
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -87,7 +93,6 @@ export default function AuthPage() {
             />
           </div>
 
-          {/* ✅ 아이디 저장 및 자동 로그인 체크박스 (로그인 시만 표시) */}
           {isLogin && (
             <div className="flex items-center">
               <input
@@ -102,7 +107,6 @@ export default function AuthPage() {
             </div>
           )}
 
-          {/* ✅ 버튼 (로그인 / 회원가입) */}
           <button
             type="submit"
             className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition"
@@ -111,7 +115,6 @@ export default function AuthPage() {
           </button>
         </form>
 
-        {/* ✅ 로그인 <-> 회원가입 전환 버튼 */}
         <p className="mt-4 text-center text-gray-400">
           {isLogin ? "계정이 없으신가요?" : "이미 계정이 있으신가요?"}
           <button

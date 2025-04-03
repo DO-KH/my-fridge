@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { fetchItems, addItem, deleteItem, Item, updateItemQuantity } from "../api/itemApi";
+import { fetchItems, addItem, deleteItem, updateItemQuantity } from "../api/itemApi";
 import { useAuthStore } from "./useAuthStore";
+import { Item } from "@/types/item";
 
 interface ItemStore {
   items: Item[];

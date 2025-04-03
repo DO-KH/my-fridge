@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useItemStore } from "./store/useItemStore";
 import {
   AlertTriangle,
   ClipboardList,
@@ -8,12 +7,36 @@ import {
   XCircle,
 } from "lucide-react";
 import { Helmet } from "react-helmet";
+import { dbItemService as itemService } from "@/services/itemService";
+import { Item } from "@/types/item";
+
+// 전역으로 전달된 SSR 데이터가 있다면 접근
+declare global {
+  interface Window {
+    __INITIAL_ITEMS__?: Item[];
+  }
+}
 
 export default function Home() {
-  const { items } = useItemStore();
+  const [items, setItems] = useState<Item[]>([]);
   const [expiringSoon, setExpiringSoon] = useState(items);
   const [recentlyAdded, setRecentlyAdded] = useState(items);
   const [expiredItems, setExpiredItems] = useState(items);
+
+  useEffect(() => {
+    console.log("✅ CSR Hydration 시작", window.__INITIAL_ITEMS__);
+
+    const ssrItems = window.__INITIAL_ITEMS__;
+
+    if (ssrItems) {
+      // 서비스에서 하이드레이션 처리
+      itemService.hydrate?.(ssrItems);
+      setItems(ssrItems);
+    } else {
+      // CSR 시점 fetch
+      itemService.fetchAll().then(setItems);
+    }
+  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -21,7 +44,8 @@ export default function Home() {
     const soonExpiring = items.filter((item) => {
       if (!item.expiryDate) return false;
       const expiryDate = new Date(item.expiryDate);
-      const daysLeft = (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+      const daysLeft =
+        (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
       return daysLeft > 0 && daysLeft <= 3;
     });
 
@@ -31,10 +55,13 @@ export default function Home() {
       return expiryDate.getTime() < today.getTime();
     });
 
-    const sortedByPurchaseDate = [...items].sort(
-      (a, b) => new Date(b.receivingDate).getTime() - new Date(a.receivingDate).getTime()
-    );
-    const recentItems = sortedByPurchaseDate.slice(0, 5);
+    const recentItems = [...items]
+      .sort(
+        (a, b) =>
+          new Date(b.receivingDate).getTime() -
+          new Date(a.receivingDate).getTime()
+      )
+      .slice(0, 5);
 
     setExpiringSoon(soonExpiring);
     setExpiredItems(alreadyExpired);
@@ -55,7 +82,10 @@ export default function Home() {
           content="냉장고 속 식품의 유통기한과 최근 입고 현황을 확인해보세요."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://yourdomain.com/og-image.png" />
+        <meta
+          property="og:image"
+          content="https://yourdomain.com/og-image.png"
+        />
         <meta property="og:url" content="https://yourdomain.com/" />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
@@ -73,13 +103,20 @@ export default function Home() {
             {expiredItems.map((item) => {
               const expiryDate = new Date(item.expiryDate ?? "");
               const today = new Date();
-              const daysOverdue = Math.floor((today.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24));
+              const daysOverdue = Math.floor(
+                (today.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
 
               return (
-                <div key={item.id} className="p-4 bg-gray-800 border border-red-500 rounded-lg shadow-md">
+                <div
+                  key={item.id}
+                  className="p-4 bg-gray-800 border border-red-500 rounded-lg shadow-md"
+                >
                   <h3 className="font-bold text-red-300">{item.name}</h3>
                   <p className="text-gray-400">수량: {item.quantity}개</p>
-                  <p className="text-red-400 font-semibold">❌ 유통기한 {daysOverdue}일 지남</p>
+                  <p className="text-red-400 font-semibold">
+                    ❌ 유통기한 {daysOverdue}일 지남
+                  </p>
                 </div>
               );
             })}
@@ -101,17 +138,23 @@ export default function Home() {
               );
 
               return (
-                <div key={item.id} className="p-4 bg-gray-800 border border-yellow-500 rounded-lg shadow-md">
+                <div
+                  key={item.id}
+                  className="p-4 bg-gray-800 border border-yellow-500 rounded-lg shadow-md"
+                >
                   <h3 className="font-bold text-yellow-300">{item.name}</h3>
                   <p className="text-gray-400">수량: {item.quantity}개</p>
                   <p className="font-semibold text-yellow-400">
-                    ⏳ 유통기한: {expiryDate.toLocaleDateString()} ({daysLeft}일 남음)
+                    ⏳ 유통기한: {expiryDate.toLocaleDateString()} ({daysLeft}일
+                    남음)
                   </p>
                 </div>
               );
             })
           ) : (
-            <p className="text-gray-500">⚡ 유통기한이 임박한 식품이 없습니다.</p>
+            <p className="text-gray-500">
+              ⚡ 유통기한이 임박한 식품이 없습니다.
+            </p>
           )}
         </div>
       </section>
@@ -123,11 +166,15 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {recentlyAdded.length > 0 ? (
             recentlyAdded.map((item) => (
-              <div key={item.id} className="p-4 bg-gray-800 border border-gray-600 rounded-lg shadow-md">
+              <div
+                key={item.id}
+                className="p-4 bg-gray-800 border border-gray-600 rounded-lg shadow-md"
+              >
                 <h3 className="font-bold text-blue-300">{item.name}</h3>
                 <p className="text-gray-400">수량: {item.quantity}개</p>
                 <p className="text-blue-400 flex items-center">
-                  <PackageCheck className="w-5 h-5 mr-2" /> 입고 날짜: {new Date(item.receivingDate).toLocaleDateString()}
+                  <PackageCheck className="w-5 h-5 mr-2" /> 입고 날짜:{" "}
+                  {new Date(item.receivingDate).toLocaleDateString()}
                 </p>
               </div>
             ))

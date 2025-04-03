@@ -2,7 +2,7 @@ import useExpiringItems from "../hooks/useExpiringItems";
 import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useLocation } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 import Notification from "./Notification";
 import { useEffect } from "react";
 import { useItemStore } from "../store/useItemStore";
@@ -24,11 +24,11 @@ export default function GlobalLayout({
 
   useEffect(() => {
     loadUser();
-  }, []);  // ✅ 최초 마운트 시에만 실행
+  }, []);  // 최초 마운트 시에만 실행
   
   useEffect(() => {
     if (user) fetchAllItems();
-  }, [user]);  // ✅ user가 변경될 때만 실행
+  }, [user]);  // user가 변경될 때만 실행
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-200">

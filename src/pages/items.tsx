@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useItemStore } from "./store/useItemStore";
+import { dbItemService as itemService } from "@/services/itemService";
+import { Item } from "@/types/item"; // 공통 타입 사용
 import {
   Trash2,
   PlusCircle,
@@ -12,26 +13,33 @@ import {
 import { Helmet } from "react-helmet";
 
 export default function Items() {
-  const { items, deleteItem, updateItemQuantity } = useItemStore();
+  const [items, setItems] = useState<Item[]>([]);
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
+
+  useEffect(() => {
+    itemService.fetchAll().then(setItems);
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    const updated = await itemService.delete(id);
+    setItems(updated);
+  };
+
+  const handleUpdateQuantity = async (id: number, newQuantity: number) => {
+    const updated = await itemService.updateQuantity(id, newQuantity);
+    setItems(updated);
+  };
 
   return (
     <div className="container mx-auto p-6 bg-gray-900 text-gray-200 min-h-screen">
       <Helmet>
         <title>식재료 관리 | 내 손의 냉장고</title>
-        <meta
-          name="description"
-          content="보관 중인 식재료의 수량을 확인하고 유통기한을 관리하세요. 실시간 재고 조절 기능도 제공됩니다."
-        />
+        <meta name="description" content="보관 중인 식재료의 수량을 확인하고 유통기한을 관리하세요." />
         <meta property="og:title" content="식재료 관리 | 내 손의 냉장고" />
-        <meta
-          property="og:description"
-          content="보관 중인 식재료의 수량을 확인하고 유통기한을 관리하세요."
-        />
+        <meta property="og:description" content="보관 중인 식재료의 수량을 확인하고 유통기한을 관리하세요." />
         <meta property="og:type" content="website" />
       </Helmet>
 
-      {/* ✅ 타이틀 & 추가 버튼 */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-green-400 flex items-center">
           <Boxes className="w-7 h-7 mr-2" /> 식재료 관리
@@ -47,16 +55,11 @@ export default function Items() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.length > 0 ? (
           items.map((item) => {
-            const purchaseDate = new Date(item.receivingDate);
-            const expiryDate = item.expiryDate
-              ? new Date(item.expiryDate)
-              : null;
+            const receivingDate = new Date(item.receivingDate);
+            const expiryDate = item.expiryDate ? new Date(item.expiryDate) : null;
             const today = new Date();
             const daysLeft = expiryDate
-              ? Math.floor(
-                  (expiryDate.getTime() - today.getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )
+              ? Math.floor((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
               : null;
 
             return (
@@ -65,7 +68,7 @@ export default function Items() {
                 className="relative bg-gray-800 border border-gray-700 rounded-lg p-4 shadow-md"
               >
                 <button
-                  onClick={() => deleteItem(item.id)}
+                  onClick={() => handleDelete(item.id)}
                   className="absolute bottom-3 right-3 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-md"
                   aria-label="삭제"
                 >
@@ -82,9 +85,7 @@ export default function Items() {
                   {hoveredItem === item.id && (
                     <div className="absolute bottom-[100%] mt-1 w-40 bg-gray-700 text-white p-2 rounded-lg shadow-lg text-sm">
                       <a
-                        href={`https://www.coupang.com/np/search?q=${encodeURIComponent(
-                          item.name
-                        )}`}
+                        href={`https://www.coupang.com/np/search?q=${encodeURIComponent(item.name)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block text-center hover:text-yellow-400"
@@ -102,9 +103,7 @@ export default function Items() {
 
                   <div className="flex space-x-2">
                     <button
-                      onClick={() =>
-                        updateItemQuantity(item.id, item.quantity - 1)
-                      }
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                       className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -112,9 +111,7 @@ export default function Items() {
                     </button>
 
                     <button
-                      onClick={() =>
-                        updateItemQuantity(item.id, item.quantity + 1)
-                      }
+                      onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                       className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full"
                     >
                       <PlusCircle className="w-5 h-5" />
@@ -123,24 +120,19 @@ export default function Items() {
                 </div>
 
                 <p className="text-gray-300 flex items-center mt-2">
-                  <PackageCheck className="w-4 h-4 mr-1" /> 입고 날짜:{" "}
-                  {purchaseDate.toLocaleDateString()}
+                  <PackageCheck className="w-4 h-4 mr-1" /> 입고 날짜: {receivingDate.toLocaleDateString()}
                 </p>
 
                 <p
                   className={`text-sm font-semibold flex items-center mt-1 ${
-                    daysLeft !== null && daysLeft <= 3
-                      ? "text-red-400"
-                      : "text-gray-300"
+                    daysLeft !== null && daysLeft <= 3 ? "text-red-400" : "text-gray-300"
                   }`}
                 >
                   <Clock className="w-4 h-4 mr-1" />
                   {expiryDate
                     ? daysLeft !== null
                       ? daysLeft < 0
-                        ? `유통기한 ${Math.abs(
-                            daysLeft
-                          )}일 지남 (${expiryDate.toLocaleDateString()})`
+                        ? `유통기한 ${Math.abs(daysLeft)}일 지남 (${expiryDate.toLocaleDateString()})`
                         : `${expiryDate.toLocaleDateString()} (${daysLeft}일 남음)`
                       : "유통기한 정보 없음"
                     : "해당 없음"}
@@ -149,9 +141,7 @@ export default function Items() {
             );
           })
         ) : (
-          <p className="text-gray-500 text-center col-span-3">
-            ❌ 저장된 식품이 없습니다.
-          </p>
+          <p className="text-gray-500 text-center col-span-3">❌ 저장된 식품이 없습니다.</p>
         )}
       </div>
     </div>
