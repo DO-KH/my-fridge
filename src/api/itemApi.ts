@@ -14,7 +14,7 @@ export const fetchItems = async (username: string): Promise<Item[]> => {
 
 // ✅ 새로운 아이템 추가
 export const addItem = async (username: string, item: Omit<Item, "id">): Promise<Item> => {
-  const res = await fetch(API_URL, {
+  const res = await fetch(`${API_URL}/api/items`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -33,7 +33,7 @@ export const addItem = async (username: string, item: Omit<Item, "id">): Promise
 
 // ✅ 아이템 삭제
 export const deleteItem = async (id: number): Promise<void> => {
-  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${API_URL}/api/items/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("아이템 삭제 실패");
 };
 
