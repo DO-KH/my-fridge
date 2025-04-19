@@ -8,5 +8,3 @@ export interface itemService {
 
 }
 
-export { dbItemService } from "./dbItemService";
-export { localItemService } from "./localItemService";

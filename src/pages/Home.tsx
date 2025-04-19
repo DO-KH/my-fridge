@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   AlertTriangle,
   ClipboardList,
@@ -7,48 +7,55 @@ import {
   XCircle,
 } from "lucide-react";
 import { Helmet } from "react-helmet";
-import { dbItemService as itemService } from "@/services/itemService";
-import { Item } from "@/types/item";
-import { useAuthStore } from "@/store/useAuthStore";
 
+import { useAuthStore } from "@/store/useAuthStore";
+import { useItemStore } from "@/store/useItemStore";
 
 export default function Home() {
-  const [items, setItems] = useState<Item[]>([]);
-  const [expiringSoon, setExpiringSoon] = useState(items);
-  const [recentlyAdded, setRecentlyAdded] = useState(items);
-  const [expiredItems, setExpiredItems] = useState(items);
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
+  const { items, fetchAllItems } = useItemStore();
 
   useEffect(() => {
     if (user) {
-      itemService.fetchAll().then((fetchedItems) => {
-        setItems(fetchedItems);
-  
-        const today = new Date();
-  
-        const soonExpiring = fetchedItems.filter((item) => {
-          if (!item.expiryDate) return false;
-          const expiryDate = new Date(item.expiryDate);
-          const daysLeft = (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-          return daysLeft > 0 && daysLeft <= 3;
-        });
-  
-        const alreadyExpired = fetchedItems.filter((item) => {
-          if (!item.expiryDate) return false;
-          const expiryDate = new Date(item.expiryDate);
-          return expiryDate.getTime() < today.getTime();
-        });
-  
-        const recentItems = [...fetchedItems]
-          .sort((a, b) => new Date(b.receivingDate).getTime() - new Date(a.receivingDate).getTime())
-          .slice(0, 5);
-  
-        setExpiringSoon(soonExpiring);
-        setExpiredItems(alreadyExpired);
-        setRecentlyAdded(recentItems);
-      });
+      fetchAllItems();
     }
-  }, [user]);
+  }, [user, fetchAllItems]);
+
+  const today = useMemo(() => new Date(), []);
+
+  const expiringSoon = useMemo(
+    () =>
+      items.filter((item) => {
+        if (!item.expiryDate) return false;
+        const expiryDate = new Date(item.expiryDate);
+        const daysLeft =
+          (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+        return daysLeft > 0 && daysLeft <= 3;
+      }),
+    [items, today]
+  );
+
+  const expiredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        if (!item.expiryDate) return false;
+        const expiryDate = new Date(item.expiryDate);
+        return expiryDate.getTime() < today.getTime();
+      }),
+    [items, today]
+  );
+
+  const recentlyAdded = useMemo(
+    () =>
+      [...items]
+        .sort(
+          (a, b) =>
+            new Date(b.receivingDate).getTime() -
+            new Date(a.receivingDate).getTime()
+        )
+        .slice(0, 5),
+    [items]
+  );
   return (
     <div className="container mx-auto p-6 bg-gray-900 text-gray-200 min-h-screen">
       <Helmet>

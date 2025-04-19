@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { dbItemService as itemService } from "@/services/itemService";
-import { Item } from "@/types/item"; // 공통 타입 사용
 import {
   Trash2,
   PlusCircle,
@@ -11,23 +9,22 @@ import {
   Boxes,
 } from "lucide-react";
 import { Helmet } from "react-helmet";
+import { useItemStore } from "@/store/useItemStore";
 
 export default function Items() {
-  const [items, setItems] = useState<Item[]>([]);
+  const { items, fetchAllItems, deleteItem, updateItemQuantity } = useItemStore();
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
 
   useEffect(() => {
-    itemService.fetchAll().then(setItems);
-  }, []);
+    fetchAllItems(); // Zustand 스토어에서 직접 불러오기
+  }, [fetchAllItems]);
 
   const handleDelete = async (id: number) => {
-    const updated = await itemService.delete(id);
-    setItems(updated);
+    await deleteItem(id); // 낙관적 삭제 이미 스토어에 있음
   };
 
   const handleUpdateQuantity = async (id: number, newQuantity: number) => {
-    const updated = await itemService.updateQuantity(id, newQuantity);
-    setItems(updated);
+    await updateItemQuantity(id, newQuantity); // 수량 변경도 스토어에서 처리
   };
 
   return (

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { dbItemService as itemService } from "@/services/itemService"; // ✅ 서비스 의존
 import { toast, ToastContainer } from "react-toastify";
 import { categories } from "@/constants/categories";
 import { ShoppingCart } from "lucide-react";
 import { Helmet } from "react-helmet";
+import { useItemStore } from "@/store/useItemStore";
 
 export default function AddItem() {
   const [name, setName] = useState("");
@@ -14,6 +14,8 @@ export default function AddItem() {
   );
   const [category, setCategory] = useState(categories[0]);
   const [hasExpiry, setHasExpiry] = useState(true);
+
+  const { addItem } = useItemStore(); // ✅ Zustand 함수 직접 사용
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,17 +29,16 @@ export default function AddItem() {
         category: category.key,
       };
 
-      await itemService.add(newItem); // 서비스 계층에 위임
+      await addItem(newItem); // ✅ 서비스 대신 스토어 함수 호출
 
       toast.success("✅ 물품이 추가되었습니다!", {
         position: "top-center",
         autoClose: 3000,
       });
 
-      // ✅ 입력 필드 초기화
-      resetForm();
+      resetForm(); // ✅ 입력 초기화
     } catch (error) {
-      console.error("아이템 추가 실패", error);
+      console.error("❌ 아이템 추가 실패", error);
       toast.error("❌ 아이템 추가에 실패했습니다.");
     }
   };
