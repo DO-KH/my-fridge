@@ -38,7 +38,7 @@ export const deleteItem = async (id: number): Promise<void> => {
 };
 
 export const updateItemQuantity = async (id: number, newQuantity: number): Promise<void> => {
-  const res = await fetch(`${API_URL}/${id}`, {
+  const res = await fetch(`${API_URL}/api/items${id}`, {
     method: "PATCH",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
