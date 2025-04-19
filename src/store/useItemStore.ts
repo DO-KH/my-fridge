@@ -3,6 +3,9 @@ import { useAuthStore } from "./useAuthStore";
 import { Item } from "@/types/item";
 import { getItemService } from "@/services/itemServiceSelector"; // ✅ 서비스 접근
 
+
+const quantityUpdateQueue: Record<number, Promise<void>> = {};
+
 interface ItemStore {
   items: Item[];
   fetchAllItems: () => Promise<void>;
@@ -68,20 +71,27 @@ export const useItemStore = create<ItemStore>((set) => ({
   },
 
   updateItemQuantity: async (id, newQuantity) => {
-    const previousItems = useItemStore.getState().items;
+    const updateTask = async () => {
+      const previousItems = useItemStore.getState().items;
 
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      ),
-    }));
+      // 낙관적 반영
+      set((state) => ({
+        items: state.items.map((item) =>
+          item.id === id ? { ...item, quantity: newQuantity } : item
+        ),
+      }));
 
-    try {
-      const updatedItems = await getItemService().updateQuantity(id, newQuantity); // 🔁 서비스 사용
-      set({ items: updatedItems });
-    } catch (error) {
-      console.error("❌ 수량 업데이트 실패", error);
-      set({ items: previousItems });
-    }
+      try {
+        const updatedItems = await getItemService().updateQuantity(id, newQuantity);
+        set({ items: updatedItems });
+      } catch (error) {
+        console.error("❌ 수량 업데이트 실패", error);
+        set({ items: previousItems });
+      }
+    };
+
+    // 큐에 등록: 이전 작업이 끝난 뒤 실행
+    const prev = quantityUpdateQueue[id] || Promise.resolve();
+    quantityUpdateQueue[id] = prev.then(updateTask);
   },
 }));
