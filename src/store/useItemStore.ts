@@ -4,7 +4,7 @@ import { Item } from "@/types/item";
 import { getItemService } from "@/services/itemServiceSelector"; // ✅ 서비스 접근
 
 
-const quantityUpdateQueue: Record<number, Promise<void>> = {};
+const pendingIds = new Set<number>();
 
 interface ItemStore {
   items: Item[];
@@ -71,27 +71,30 @@ export const useItemStore = create<ItemStore>((set) => ({
   },
 
   updateItemQuantity: async (id, newQuantity) => {
-    const updateTask = async () => {
-      const previousItems = useItemStore.getState().items;
-
-      // 낙관적 반영
-      set((state) => ({
-        items: state.items.map((item) =>
-          item.id === id ? { ...item, quantity: newQuantity } : item
-        ),
-      }));
-
-      try {
-        const updatedItems = await getItemService().updateQuantity(id, newQuantity);
-        set({ items: updatedItems });
-      } catch (error) {
-        console.error("❌ 수량 업데이트 실패", error);
-        set({ items: previousItems });
-      }
-    };
-
-    // 큐에 등록: 이전 작업이 끝난 뒤 실행
-    const prev = quantityUpdateQueue[id] || Promise.resolve();
-    quantityUpdateQueue[id] = prev.then(updateTask);
-  },
+    if (pendingIds.has(id)) {
+      console.warn(`🚧 수량 업데이트 중: ID ${id} 요청 무시됨`);
+      return; // ✅ 이미 처리 중이면 무시
+    }
+  
+    pendingIds.add(id); // 🔐 락 걸기
+  
+    const previousItems = useItemStore.getState().items;
+  
+    // ✅ 낙관적 UI 적용
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      ),
+    }));
+  
+    try {
+      const updatedItems = await getItemService().updateQuantity(id, newQuantity);
+      set({ items: updatedItems });
+    } catch (error) {
+      console.error("❌ 수량 업데이트 실패", error);
+      set({ items: previousItems }); // 롤백
+    } finally {
+      pendingIds.delete(id); // 🔓 락 해제
+    }
+  }
 }));
