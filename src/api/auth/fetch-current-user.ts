@@ -1,6 +1,7 @@
 export async function fetchCurrentUser() {
+  const API_URL = import.meta.env.VITE_API_URL
   try {
-    const res = await fetch("http://localhost:5000/api/auth/user", {
+    const res = await fetch(`${API_URL}/api/auth/user`, {
       method: "GET",
       credentials: "include",
     });

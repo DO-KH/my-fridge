@@ -1,9 +1,10 @@
 import { Item } from "@/types/item";
 
-const API_URL = "http://localhost:5000/api/items";
+// const API_URL = "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL
 
 export const fetchItems = async (username: string): Promise<Item[]> => {
-  const res = await fetch(`${API_URL}?username=${encodeURIComponent(username)}`, {
+  const res = await fetch(`${API_URL}/api/items?username=${encodeURIComponent(username)}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
