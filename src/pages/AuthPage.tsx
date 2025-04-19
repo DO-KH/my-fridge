@@ -13,12 +13,10 @@ export default function AuthPage() {
   const { login } = useAuthStore();
   const navigate = useNavigate();
 
-  // ✅ CSR 환경에서만 localStorage 접근
+  // CSR 전용: localStorage에서 이메일을 가져옴
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("savedEmail");
-      if (saved) setEmail(saved);
-    }
+    const saved = localStorage.getItem("savedEmail");
+    if (saved) setEmail(saved);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,10 +32,9 @@ export default function AuthPage() {
         return;
       }
 
-      if (typeof window !== "undefined") {
-        if (rememberMe) localStorage.setItem("savedEmail", email);
-        else localStorage.removeItem("savedEmail");
-      }
+      // 로그인 시 localStorage에 이메일 저장
+      if (rememberMe) localStorage.setItem("savedEmail", email);
+      else localStorage.removeItem("savedEmail");
 
       navigate("/");
     } catch (error: unknown) {

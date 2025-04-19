@@ -26,8 +26,4 @@ export const dbItemService: itemService = {
     return useItemStore.getState().items;
   },
 
-  // SSR 시점에 가져온 아이템을 CSR 시점에도 주입
-  hydrate: (items) => {
-    useItemStore.setState({ items });
-  },
 };

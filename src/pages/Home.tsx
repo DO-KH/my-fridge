@@ -9,65 +9,46 @@ import {
 import { Helmet } from "react-helmet";
 import { dbItemService as itemService } from "@/services/itemService";
 import { Item } from "@/types/item";
+import { useAuthStore } from "@/store/useAuthStore";
 
-// 전역으로 전달된 SSR 데이터가 있다면 접근
-declare global {
-  interface Window {
-    __INITIAL_ITEMS__?: Item[];
-  }
-}
 
 export default function Home() {
   const [items, setItems] = useState<Item[]>([]);
   const [expiringSoon, setExpiringSoon] = useState(items);
   const [recentlyAdded, setRecentlyAdded] = useState(items);
   const [expiredItems, setExpiredItems] = useState(items);
+  const {user} = useAuthStore();
 
   useEffect(() => {
-    console.log("✅ CSR Hydration 시작", window.__INITIAL_ITEMS__);
-
-    const ssrItems = window.__INITIAL_ITEMS__;
-
-    if (ssrItems) {
-      // 서비스에서 하이드레이션 처리
-      itemService.hydrate?.(ssrItems);
-      setItems(ssrItems);
-    } else {
-      // CSR 시점 fetch
-      itemService.fetchAll().then(setItems);
+    if (user) {
+      itemService.fetchAll().then((fetchedItems) => {
+        setItems(fetchedItems);
+  
+        const today = new Date();
+  
+        const soonExpiring = fetchedItems.filter((item) => {
+          if (!item.expiryDate) return false;
+          const expiryDate = new Date(item.expiryDate);
+          const daysLeft = (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+          return daysLeft > 0 && daysLeft <= 3;
+        });
+  
+        const alreadyExpired = fetchedItems.filter((item) => {
+          if (!item.expiryDate) return false;
+          const expiryDate = new Date(item.expiryDate);
+          return expiryDate.getTime() < today.getTime();
+        });
+  
+        const recentItems = [...fetchedItems]
+          .sort((a, b) => new Date(b.receivingDate).getTime() - new Date(a.receivingDate).getTime())
+          .slice(0, 5);
+  
+        setExpiringSoon(soonExpiring);
+        setExpiredItems(alreadyExpired);
+        setRecentlyAdded(recentItems);
+      });
     }
-  }, []);
-
-  useEffect(() => {
-    const today = new Date();
-
-    const soonExpiring = items.filter((item) => {
-      if (!item.expiryDate) return false;
-      const expiryDate = new Date(item.expiryDate);
-      const daysLeft =
-        (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-      return daysLeft > 0 && daysLeft <= 3;
-    });
-
-    const alreadyExpired = items.filter((item) => {
-      if (!item.expiryDate) return false;
-      const expiryDate = new Date(item.expiryDate);
-      return expiryDate.getTime() < today.getTime();
-    });
-
-    const recentItems = [...items]
-      .sort(
-        (a, b) =>
-          new Date(b.receivingDate).getTime() -
-          new Date(a.receivingDate).getTime()
-      )
-      .slice(0, 5);
-
-    setExpiringSoon(soonExpiring);
-    setExpiredItems(alreadyExpired);
-    setRecentlyAdded(recentItems);
-  }, [items]);
-
+  }, [user]);
   return (
     <div className="container mx-auto p-6 bg-gray-900 text-gray-200 min-h-screen">
       <Helmet>

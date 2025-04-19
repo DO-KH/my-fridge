@@ -6,10 +6,6 @@ import Items from "./pages/items";
 import AddItem from "./pages/add-item";
 import Settings from "./settings";
 import AuthPage from "./pages/AuthPage";
-import pkg from 'react-router-dom';
-
-console.log('✅ react-router-dom keys:', Object.keys(pkg));
-console.log('✅ useLocation:', typeof pkg.useLocation);
 
 export function App() {
   return (
