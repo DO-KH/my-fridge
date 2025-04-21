@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 export default function Header() {
-  const { user, logout, isLoading } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -31,10 +31,7 @@ export default function Header() {
             설정
           </Link>
 
-          {isLoading && user === null ? (
-            <div className="text-sm text-gray-400">로딩 중...</div>
-          ) :
-          user ? (
+          {user ? (
             <div ref={menuRef} className="relative">
               <button
                 onClick={() => setShowMenu((prev) => !prev)}

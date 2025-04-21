@@ -11,7 +11,7 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  isLoading: boolean;
+
   loadUser: () => Promise<void>; // 세션 유지 확인
   login: (email: string, password: string) => Promise<void>; // 로그인
   logout: () => Promise<void>; // 로그아웃
@@ -19,7 +19,6 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isLoading: true,
 
   // 세션 검증 및 상태 반영 
   loadUser: async () => {
@@ -28,7 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: currentUser });
     } catch (err) {
       console.log(err);
-      set({ user: null, isLoading: false });
+      set({ user: null });
     }
   },
 
