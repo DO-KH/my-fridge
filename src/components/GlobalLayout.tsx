@@ -34,6 +34,14 @@ export default function GlobalLayout({
     }
   }, [isLoading, user]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="text-lg text-gray-400">로딩 중...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-200">
       {/* ✅ 상단 네비게이션 */}
