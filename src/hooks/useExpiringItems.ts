@@ -18,7 +18,8 @@ export default function useExpiringItems() {
       if (user) {
         // ✅ 로그인 상태 - 서버에서 요청
         try {
-          const response = await fetch("http://localhost:5000/api/items/expiring-soon", {
+          const API_URL = import.meta.env.VITE_API_URL;
+          const response = await fetch(`${API_URL}/api/items/expiring-soon`, {
             credentials: "include",
           });
           if (!response.ok) throw new Error("서버 요청 실패");
