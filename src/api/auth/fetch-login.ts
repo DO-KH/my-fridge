@@ -12,9 +12,10 @@ export async function fetchLogin(email: string, password: string) {
       throw new Error(await res.text());
     }
 
-    console.log(res.json())
+    const data = await res.json()
+    console.log(data)
 
-    return { success: true, email };
+    return data;
   } catch (error: unknown) {
     console.error("❌ 로그인 실패:", error);
     if (error instanceof Error) {

@@ -1,44 +1,58 @@
 import { useEffect, useRef } from "react";
 import { useNotificationStore } from "../store/useNotificationStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useItemStore } from "@/store/useItemStore";
 
 export default function useExpiringItems() {
-  const { addNotification, notifications, isNotificationEnabled } = useNotificationStore();
-  const prevNotificationsRef = useRef(new Set<string>()); // 이전 알림 저장
+  const { addNotification, isNotificationEnabled } = useNotificationStore();
+  const { user } = useAuthStore();
+  const { items } = useItemStore();
+  const prevNotificationsRef = useRef(new Set<string>());
 
   useEffect(() => {
+    if (!isNotificationEnabled) return;
 
-    if(!isNotificationEnabled) return;
+    async function checkExpiringItems() {
+      let expiringItems = [];
 
-    async function fetchExpiringItems() {
-      try {
-        console.log("🚀 [DEBUG] 유통기한 체크 실행"); // 디버깅 로그 추가
-        const response = await fetch("http://localhost:5000/api/items/expiring-soon");
-
-        if (!response.ok) {
-          throw new Error(`서버 응답 실패: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (data.length > 0) {
-          data.forEach((item: { name: string; expiryDate: string }) => {
-            const message = `🚨 ${item.name}의 유통기한이 ${item.expiryDate}까지입니다!`;
-
-            // ✅ 이미 존재하는 알람인지 확인하고 중복 방지
-            if (!prevNotificationsRef.current.has(message)) {
-              prevNotificationsRef.current.add(message);
-              addNotification(message);
-            }
+      if (user) {
+        // ✅ 로그인 상태 - 서버에서 요청
+        try {
+          const response = await fetch("http://localhost:5000/api/items/expiring-soon", {
+            credentials: "include",
           });
+          if (!response.ok) throw new Error("서버 요청 실패");
+          expiringItems = await response.json();
+        } catch (err) {
+          console.error("유통기한 알림 실패 (서버)", err);
+          return;
         }
-      } catch (error) {
-        console.error("유통기한 알림 로드 실패", error);
+      } else {
+        // 비로그인 상태 - 로컬 상태에서 유통기한 계산
+        const today = new Date();
+        const threeDaysLater = new Date();
+        threeDaysLater.setDate(today.getDate() + 3);
+
+        expiringItems = items.filter((item) => {
+          if (!item.expiryDate) return false;
+          const expiry = new Date(item.expiryDate);
+          return expiry >= today && expiry <= threeDaysLater;
+        });
       }
+
+      expiringItems.forEach((item: { name: string; expiryDate: string }) => {
+        const message = `🚨 ${item.name}의 유통기한이 ${item.expiryDate}까지입니다!`;
+
+        if (!prevNotificationsRef.current.has(message)) {
+          prevNotificationsRef.current.add(message);
+          addNotification(message);
+        }
+      });
     }
 
-    fetchExpiringItems();
-    const interval = setInterval(fetchExpiringItems, 1000 * 60 * 60); // 1시간마다 체크
+    checkExpiringItems();
+    const interval = setInterval(checkExpiringItems, 1000 * 60 * 60);
 
     return () => clearInterval(interval);
-  }, [addNotification, notifications]); // ✅ 중복 방지
+  }, [addNotification, isNotificationEnabled, user, items]);
 }

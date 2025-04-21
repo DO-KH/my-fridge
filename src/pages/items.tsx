@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Trash2,
@@ -12,19 +12,15 @@ import { Helmet } from "react-helmet";
 import { useItemStore } from "@/store/useItemStore";
 
 export default function Items() {
-  const { items, fetchAllItems, deleteItem, updateItemQuantity } = useItemStore();
+  const { items, deleteItem, updateItemQuantity } = useItemStore();
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
 
-  useEffect(() => {
-    fetchAllItems(); // Zustand 스토어에서 직접 불러오기
-  }, [fetchAllItems]);
-
   const handleDelete = async (id: number) => {
-    await deleteItem(id); // 낙관적 삭제 이미 스토어에 있음
+    await deleteItem(id);
   };
 
   const handleUpdateQuantity = async (id: number, newQuantity: number) => {
-    await updateItemQuantity(id, newQuantity); // 수량 변경도 스토어에서 처리
+    await updateItemQuantity(id, newQuantity);
   };
 
   return (

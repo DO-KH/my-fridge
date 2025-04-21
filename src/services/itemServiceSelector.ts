@@ -1,23 +1,28 @@
-import { itemService } from "./itemService"; // 인터페이스
-import { dbItemService } from "./dbItemService"; // 구현체 1
-import { localItemService } from "./localItemService"; // 구현체 2
+import { itemService } from "./itemService";
+import { dbItemService } from "./dbItemService";
+import { localItemService } from "./localItemService";
+import { useAuthStore } from "@/store/useAuthStore";
 
-// 현재 사용 중인 전략 (초기값: db)
-let current: itemService
+// 전략 주입은 삭제 (사용 안 함)
+// export const setItemService = (_impl: itemService) => {
+//   console.warn("setItemService는 현재 사용되지 않음");
+// };
 
-if (import.meta.env.DEV) {
-  current = localItemService;
-  console.info("🛠 [itemService] 개발 모드 - localItemService 적용");
-} else {
-  current = dbItemService;
-  console.info("🚀 [itemService] 운영 모드 - dbItemService 적용");
-}
+// 로그인 여부에 따라 전략 동적 반환
+export const getItemService = (): itemService => {
+  const { user, isLoading } = useAuthStore.getState();
 
-// 외부에서 전략을 주입할 수 있게 함
-export const setItemService = (impl: itemService) => {
-  current = impl;
+  // 유저 로딩 전이면 일단 local 사용
+  if (isLoading) {
+    console.info("📦 유저 로딩 중 - localItemService 사용");
+    return localItemService;
+  }
+
+  if (user) {
+    console.info("✅ 로그인 상태 - dbItemService 사용");
+    return dbItemService;
+  }
+
+  console.info("🚫 비로그인 상태 - localItemService 사용");
+  return localItemService;
 };
-
-// 현재 전략을 반환함 (스토어나 컴포넌트에서 사용)
-export const getItemService = (): itemService => current;
-

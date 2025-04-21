@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   AlertTriangle,
   ClipboardList,
@@ -7,20 +7,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { Helmet } from "react-helmet";
-
-import { useAuthStore } from "@/store/useAuthStore";
 import { useItemStore } from "@/store/useItemStore";
 
 export default function Home() {
-  const { user } = useAuthStore();
-  const { items, fetchAllItems } = useItemStore();
 
-  useEffect(() => {
-    if (user) {
-      fetchAllItems();
-    }
-  }, [user, fetchAllItems]);
+  const { items } = useItemStore();
 
+  
   const today = useMemo(() => new Date(), []);
 
   const expiringSoon = useMemo(

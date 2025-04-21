@@ -15,7 +15,7 @@ export default function GlobalLayout({
 }) {
   const location = useLocation();
   const { fetchAllItems } = useItemStore();
-  const { user, loadUser } = useAuthStore();
+  const { loadUser, isLoading, user } = useAuthStore();
 
   // ✅ 특정 페이지에서 Sidebar를 숨김
   const hideSidebarRoutes = ["/settings", "/login"];
@@ -23,12 +23,16 @@ export default function GlobalLayout({
   useExpiringItems();
 
   useEffect(() => {
-    loadUser();
-  }, []);  // 최초 마운트 시에만 실행
+    loadUser(); // 첫 진입 시 유저 판단
+  }, []);
   
   useEffect(() => {
-    if (user) fetchAllItems();
-  }, [user]);  // user가 변경될 때만 실행
+    if (!isLoading && user) {
+      fetchAllItems(); // 서비스 -> db
+    } else {
+      fetchAllItems() // 서비스 -> local
+    }
+  }, [isLoading, user]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-200">

@@ -1,8 +1,6 @@
 import { create } from "zustand";
-import { useAuthStore } from "./useAuthStore";
 import { Item } from "@/types/item";
-import { getItemService } from "@/services/itemServiceSelector"; // 서비스 접근
-
+import { getItemService } from "@/services/itemServiceSelector";
 
 const pendingIds = new Set<number>();
 
@@ -18,11 +16,8 @@ export const useItemStore = create<ItemStore>((set) => ({
   items: [],
 
   fetchAllItems: async () => {
-    const user = useAuthStore.getState().user;
-    if (!user) return;
-
     try {
-      const data = await getItemService().fetchAll(); // 🔁 전략 서비스 호출
+      const data = await getItemService().fetchAll();
       set({ items: data });
     } catch (error) {
       console.error("❌ 아이템 불러오기 실패", error);
@@ -30,12 +25,6 @@ export const useItemStore = create<ItemStore>((set) => ({
   },
 
   addItem: async (item) => {
-    const user = useAuthStore.getState().user;
-    if (!user) {
-      console.error("🚨 유저 정보 없음. 아이템 추가 불가.");
-      return;
-    }
-
     const optimisticItem = {
       ...item,
       id: Date.now(), // 임시 ID
@@ -44,7 +33,7 @@ export const useItemStore = create<ItemStore>((set) => ({
     set((state) => ({ items: [...state.items, optimisticItem] }));
 
     try {
-      const updatedItems = await getItemService().add(item); // 🔁 서비스 사용
+      const updatedItems = await getItemService().add(item);
       set({ items: updatedItems });
     } catch (error) {
       set((state) => ({
@@ -62,7 +51,7 @@ export const useItemStore = create<ItemStore>((set) => ({
     }));
 
     try {
-      const updatedItems = await getItemService().delete(id); // 🔁 서비스 사용
+      const updatedItems = await getItemService().delete(id);
       set({ items: updatedItems });
     } catch (error) {
       console.error("❌ 아이템 삭제 실패", error);
@@ -73,28 +62,27 @@ export const useItemStore = create<ItemStore>((set) => ({
   updateItemQuantity: async (id, newQuantity) => {
     if (pendingIds.has(id)) {
       console.warn(`🚧 수량 업데이트 중: ID ${id} 요청 무시됨`);
-      return; // ✅ 이미 처리 중이면 무시
+      return;
     }
-  
-    pendingIds.add(id); // 🔐 락 걸기
-  
+
+    pendingIds.add(id);
+
     const previousItems = useItemStore.getState().items;
-  
-    // ✅ 낙관적 UI 적용
+
     set((state) => ({
       items: state.items.map((item) =>
         item.id === id ? { ...item, quantity: newQuantity } : item
       ),
     }));
-  
+
     try {
       const updatedItems = await getItemService().updateQuantity(id, newQuantity);
       set({ items: updatedItems });
     } catch (error) {
       console.error("❌ 수량 업데이트 실패", error);
-      set({ items: previousItems }); // 롤백
+      set({ items: previousItems });
     } finally {
-      pendingIds.delete(id); // 🔓 락 해제
+      pendingIds.delete(id);
     }
-  }
+  },
 }));
