@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 export default function Header() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isLoading } = useAuthStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -16,6 +16,8 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  if (isLoading) return null;
 
   return (
     <header className="bg-gray-900 text-gray-200 shadow-lg">

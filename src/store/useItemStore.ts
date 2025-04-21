@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { useAuthStore } from "./useAuthStore";
 import { Item } from "@/types/item";
-import { getItemService } from "@/services/itemServiceSelector"; // ✅ 서비스 접근
+import { getItemService } from "@/services/itemServiceSelector"; // 서비스 접근
 
 
 const pendingIds = new Set<number>();
