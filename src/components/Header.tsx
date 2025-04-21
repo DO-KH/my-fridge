@@ -17,8 +17,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (isLoading) return null;
-
   return (
     <header className="bg-gray-900 text-gray-200 shadow-lg">
       <nav className="container mx-auto flex justify-between items-center p-4">
@@ -33,7 +31,10 @@ export default function Header() {
             설정
           </Link>
 
-          {user ? (
+          {isLoading ? (
+            <div className="text-sm text-gray-400">로딩 중...</div>
+          ) :
+          user ? (
             <div ref={menuRef} className="relative">
               <button
                 onClick={() => setShowMenu((prev) => !prev)}
