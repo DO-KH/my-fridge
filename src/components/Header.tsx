@@ -31,7 +31,7 @@ export default function Header() {
             설정
           </Link>
 
-          {isLoading ? (
+          {isLoading && user === null ? (
             <div className="text-sm text-gray-400">로딩 중...</div>
           ) :
           user ? (
