@@ -9,6 +9,7 @@ import { useItemStore } from "../store/useItemStore";
 import { useAuthStore } from "../store/useAuthStore";
 import DataStorageChoice from "./DataStorageChoice";
 import GuestBanner from "./GuestBanner";
+import LoadingScreen from "./LoadingScreen";
 
 export default function GlobalLayout({
   children,
@@ -40,14 +41,7 @@ export default function GlobalLayout({
   }, [status, user]);
 
   if (status === "checking") {
-    return (
-      <div className="w-full h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center space-y-4 text-gray-300 animate-pulse">
-          <p className="text-2xl font-semibold">냉장고를 여는 중이에요...</p>
-          <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />
   }
 
   const isAuthPage = location.pathname === "/auth";
@@ -66,7 +60,7 @@ export default function GlobalLayout({
       <Header />
       <Notification />
 
-      {/* ✅ 컨텐츠 영역 (Sidebar 포함) */}
+      {/* 컨텐츠 영역 (Sidebar 포함) */}
       <div className="flex flex-1 container mx-auto">
         {showSidebar && <Sidebar />}
         <main
