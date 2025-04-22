@@ -7,6 +7,7 @@ import Notification from "./Notification";
 import { useEffect } from "react";
 import { useItemStore } from "../store/useItemStore";
 import { useAuthStore } from "../store/useAuthStore";
+import DataStorageChoice from "./DataStorageChoice";
 
 export default function GlobalLayout({
   children,
@@ -15,31 +16,30 @@ export default function GlobalLayout({
 }) {
   const location = useLocation();
   const { fetchAllItems } = useItemStore();
-  const { loadUser, isLoading, user } = useAuthStore();
+  const { loadUser, status, hasChosenStorage, user } = useAuthStore();
 
-  // ✅ 특정 페이지에서 Sidebar를 숨김
+  // 특정 페이지에서 Sidebar를 숨김
   const hideSidebarRoutes = ["/settings", "/login"];
   const showSidebar = !hideSidebarRoutes.includes(location.pathname);
   useExpiringItems();
 
   useEffect(() => {
-    loadUser(); // 첫 진입 시 유저 판단
-  }, []);
+    if (status === "checking") {
+      loadUser();
+    }
+  }, [status]);
   
   useEffect(() => {
-    if (!isLoading && user) {
-      fetchAllItems(); // 서비스 -> db
-    } else {
-      fetchAllItems() // 서비스 -> local
+    if ((status === "guest" && !user) || (status === "authenticated" && user)) {
+      fetchAllItems();
     }
-  }, [isLoading, user]);
+  }, [status, user]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="text-lg text-gray-400">로딩 중...</span>
-      </div>
-    );
+  const isAuthPage = location.pathname === "/auth";
+
+  // auth 페이지가 아닌데 아직 저장방식 선택 안 했으면
+  if (!isAuthPage && status === "guest" && !hasChosenStorage) {
+    return <DataStorageChoice />;
   }
 
   return (

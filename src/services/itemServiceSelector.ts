@@ -10,19 +10,18 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 // 로그인 여부에 따라 전략 동적 반환
 export const getItemService = (): itemService => {
-  const { user, isLoading } = useAuthStore.getState();
+  const { user, status } = useAuthStore.getState();
 
   // 유저 로딩 전이면 일단 local 사용
-  if (isLoading) {
-    console.info("📦 유저 로딩 중 - localItemService 사용");
-    return localItemService;
+  // if (isLoading) {
+  //   console.info("📦 유저 로딩 중 - localItemService 사용");
+  //   return localItemService;
+  // }
+
+  if (status === "checking") {
+    throw new Error("❌ 인증 상태가 확인되기 전에는 itemService를 사용할 수 없습니다.");
   }
 
-  if (user) {
-    console.info("✅ 로그인 상태 - dbItemService 사용");
-    return dbItemService;
-  }
-
-  console.info("🚫 비로그인 상태 - localItemService 사용");
+  if (user && status === "authenticated") return dbItemService;
   return localItemService;
 };

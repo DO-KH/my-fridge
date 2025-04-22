@@ -12,7 +12,6 @@ import { useItemStore } from "@/store/useItemStore";
 export default function Home() {
 
   const { items } = useItemStore();
-
   
   const today = useMemo(() => new Date(), []);
 
@@ -49,6 +48,7 @@ export default function Home() {
         .slice(0, 5),
     [items]
   );
+  
   return (
     <div className="container mx-auto p-6 bg-gray-900 text-gray-200 min-h-screen">
       <Helmet>
