@@ -2,12 +2,13 @@ import useExpiringItems from "../hooks/useExpiringItems";
 import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
 import Notification from "./Notification";
 import { useEffect } from "react";
 import { useItemStore } from "../store/useItemStore";
 import { useAuthStore } from "../store/useAuthStore";
 import DataStorageChoice from "./DataStorageChoice";
+import GuestBanner from "./GuestBanner";
 
 export default function GlobalLayout({
   children,
@@ -23,20 +24,31 @@ export default function GlobalLayout({
   const showSidebar = !hideSidebarRoutes.includes(location.pathname);
   useExpiringItems();
 
-  // 최초 상태 체크: checking -> guest(서버가 인식하기를) 
+  // 최초 상태 체크: checking -> guest(서버가 인식하기를)
   // 서버 입장에서는 로그인 유저가 아니면 전부 guest로 판단
   useEffect(() => {
     if (status === "checking") {
       loadUser();
     }
   }, [status]);
-  
+
   // 저장 방식을 선택하기 전까진 데이터를 요청하지 않음
-  useEffect(() => { 
+  useEffect(() => {
     if ((status === "guest" && !user) || (status === "authenticated" && user)) {
       fetchAllItems();
     }
   }, [status, user]);
+
+  if (status === "checking") {
+    return (
+      <div className="w-full h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center space-y-4 text-gray-300 animate-pulse">
+          <p className="text-2xl font-semibold">냉장고를 여는 중이에요...</p>
+          <p className="text-sm text-gray-500">잠시만 기다려주세요</p>
+        </div>
+      </div>
+    );
+  }
 
   const isAuthPage = location.pathname === "/auth";
 
@@ -47,6 +59,9 @@ export default function GlobalLayout({
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-200">
+      {status === "guest" && hasChosenStorage && (
+        <GuestBanner />
+      )}
       {/* 상단 네비게이션 */}
       <Header />
       <Notification />
