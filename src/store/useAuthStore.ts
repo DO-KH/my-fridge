@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
 
       loadUser: async () => {
         try {
-          const user = await fetchCurrentUser();
+          const user = await fetchCurrentUser({silent: true});
           set({ user, status: "authenticated" });
         } catch (err) {
           console.log("세션 없음 (게스트):", err);
@@ -48,7 +48,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         try {
           await fetchLogin(email, password); // 세션 생성
-          const user = await fetchCurrentUser(); // 유저 정보 요청
+          const user = await fetchCurrentUser({silent: false}); // 유저 정보 요청
           set({ user, status: "authenticated" });
         } catch (err) {
           console.error("❌ 로그인 실패:", err);

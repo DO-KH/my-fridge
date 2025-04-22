@@ -23,13 +23,16 @@ export default function GlobalLayout({
   const showSidebar = !hideSidebarRoutes.includes(location.pathname);
   useExpiringItems();
 
+  // 최초 상태 체크: checking -> guest(서버가 인식하기를) 
+  // 서버 입장에서는 로그인 유저가 아니면 전부 guest로 판단
   useEffect(() => {
     if (status === "checking") {
       loadUser();
     }
   }, [status]);
   
-  useEffect(() => {
+  // 저장 방식을 선택하기 전까진 데이터를 요청하지 않음
+  useEffect(() => { 
     if ((status === "guest" && !user) || (status === "authenticated" && user)) {
       fetchAllItems();
     }
@@ -37,14 +40,14 @@ export default function GlobalLayout({
 
   const isAuthPage = location.pathname === "/auth";
 
-  // auth 페이지가 아닌데 아직 저장방식 선택 안 했으면
+  // 첫 검증으로 인해 이미 상태는 guest
   if (!isAuthPage && status === "guest" && !hasChosenStorage) {
     return <DataStorageChoice />;
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-gray-200">
-      {/* ✅ 상단 네비게이션 */}
+      {/* 상단 네비게이션 */}
       <Header />
       <Notification />
 
@@ -60,7 +63,7 @@ export default function GlobalLayout({
         </main>
       </div>
 
-      {/* ✅ Footer */}
+      {/* Footer */}
       <Footer />
     </div>
   );
