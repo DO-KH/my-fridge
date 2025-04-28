@@ -2,7 +2,7 @@ import useExpiringItems from "../hooks/useExpiringItems";
 import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Notification from "./Notification";
 import { useEffect } from "react";
 import { useItemStore } from "../store/useItemStore";
