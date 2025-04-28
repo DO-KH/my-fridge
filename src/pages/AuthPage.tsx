@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchRegister } from "@/api/auth/fetch-register";
 import { Lock, User, Mail } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -10,7 +9,8 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  const { login } = useAuthStore();
+  // const [withGuestData, setWithGuestData] = useState(true);
+  const { login, register } = useAuthStore();
   const navigate = useNavigate();
 
   // CSR 전용: localStorage에서 이메일을 가져옴
@@ -26,7 +26,7 @@ export default function AuthPage() {
       if (isLogin) {
         await login(email, password);
       } else {
-        await fetchRegister(email, password, name);
+        await register(email, password, name);
         alert("회원가입 성공! 로그인 해주세요.");
         setIsLogin(true);
         return;
@@ -89,6 +89,20 @@ export default function AuthPage() {
               className="w-full p-3 pl-10 border border-gray-600 rounded-lg bg-gray-900 text-gray-200 focus:ring-2 focus:ring-green-400"
             />
           </div>
+
+          {/* {!isLogin && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={withGuestData}
+                onChange={(e) => setWithGuestData(e.target.checked)}
+                className="mr-2"
+              />
+              <label className="text-gray-300">
+                기존 게스트 데이터 이어받기
+              </label>
+            </div>
+          )} */}
 
           {isLogin && (
             <div className="flex items-center">

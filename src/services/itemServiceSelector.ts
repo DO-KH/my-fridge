@@ -3,7 +3,7 @@ import { dbItemService } from "./dbItemService";
 import { localItemService } from "./localItemService";
 import { useAuthStore } from "@/store/useAuthStore";
 
-// 전략 주입은 삭제 (사용 안 함)
+// 전략 주입 X (사용 안 함)
 // export const setItemService = (_impl: itemService) => {
 //   console.warn("setItemService는 현재 사용되지 않음");
 // };
@@ -14,12 +14,12 @@ export const getItemService = (): itemService => {
 
   // 유저 로딩 전이면 일단 local 사용
   // if (isLoading) {
-  //   console.info("📦 유저 로딩 중 - localItemService 사용");
+  //   console.info("유저 로딩 중 - localItemService 사용");
   //   return localItemService;
   // }
 
   if (status === "checking") {
-    throw new Error("❌ 인증 상태가 확인되기 전에는 itemService를 사용할 수 없습니다.");
+    throw new Error("인증 상태가 확인되기 전에는 itemService를 사용할 수 없습니다.");
   }
 
   if (user && status === "authenticated") return dbItemService;

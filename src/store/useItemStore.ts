@@ -20,7 +20,7 @@ export const useItemStore = create<ItemStore>((set) => ({
       const data = await getItemService().fetchAll();
       set({ items: data });
     } catch (error) {
-      console.error("❌ 아이템 불러오기 실패", error);
+      console.error("아이템 불러오기 실패", error);
     }
   },
 

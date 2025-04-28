@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function LoadingScreen() {
   return (
     <div className="w-full h-screen bg-gray-950 flex items-center justify-center">

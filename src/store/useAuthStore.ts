@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import { fetchCurrentUser } from "../api/auth/fetch-current-user";
 import { fetchLogout } from "../api/auth/fetch-logout";
 import { fetchLogin } from "../api/auth/fetch-login";
+import { fetchRegister } from "@/api/auth/fetch-register";
+
 
 type AuthStatus = "checking" | "guest" | "authenticated";
 
@@ -20,9 +22,11 @@ interface AuthState {
 
   // methods
   loadUser: () => Promise<void>;
+  register: (email: string, password: string, name: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
+
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -42,6 +46,16 @@ export const useAuthStore = create<AuthState>()(
         } catch (err) {
           console.log("세션 없음 (게스트):", err);
           set({ user: null, status: "guest" });
+        }
+      },
+
+      register: async (email, password, name) => {
+        try {
+          await fetchRegister(email, password, name);
+          // 회원가입 후 바로 로그인하거나, 회원가입 완료 알림만 띄우고 끝낼 수 있음
+        } catch (err) {
+          console.error("❌ 회원가입 실패:", err);
+          throw err; // 실패를 컴포넌트에 전달
         }
       },
 
