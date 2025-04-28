@@ -24,7 +24,7 @@ export default function GlobalLayout({
   const hideSidebarRoutes = ["/settings", "/login"];
   const showSidebar = !hideSidebarRoutes.includes(location.pathname);
   useExpiringItems();
-  const navigate = useNavigate();
+  
 
   // 최초 상태 체크: checking -> guest(서버가 인식하기를)
   // 서버 입장에서는 로그인 유저가 아니면 전부 guest로 판단
@@ -34,14 +34,7 @@ export default function GlobalLayout({
     }
   }, [status]);
 
-  useEffect(() => {
-    // 상태가 authenticated로 변경되면 그때 페이지 이동 처리
-    if (status === "authenticated") {
-      navigate("/");  // 로그인 후 홈으로 리다이렉트
-    }
-  }, [status, navigate]);
-
-
+  
   // 저장 방식을 선택하기 전진 데이터를 요청하지 않음
   useEffect(() => {
     if ((status === "guest" && !user) || (status === "authenticated" && user)) {
