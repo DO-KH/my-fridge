@@ -13,7 +13,7 @@ export async function fetchLogin(email: string, password: string) {
     }
 
     const data = await res.json()
-    console.log(data)
+    console.log("로그인 응답", data)
 
     return data;
   } catch (error: unknown) {

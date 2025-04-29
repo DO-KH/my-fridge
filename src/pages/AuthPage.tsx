@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lock, User, Mail } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useItemStore } from "@/store/useItemStore";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,7 +10,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  // const [withGuestData, setWithGuestData] = useState(true);
+  const [withGuestData, setWithGuestData] = useState(false);
   const { login, register } = useAuthStore();
   const navigate = useNavigate();
 
@@ -19,16 +20,35 @@ export default function AuthPage() {
     if (saved) setEmail(saved);
   }, []);
 
+  // useEffect(() => {
+  //   if (status === "authenticated") {
+  //     navigate("/");
+  //   }
+  // }, [status, navigate]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
       if (isLogin) {
-        await login(email, password);
+        const loginUser = await login(email, password);
+        if (loginUser) {
+          navigate("/"); // 로그인 성공 → 메인 이동
+        } else {
+          alert("로그인 실패: 아이디 또는 비밀번호를 확인하세요.");
+        }
       } else {
-        await register(email, password, name);
-        alert("회원가입 성공! 로그인 해주세요.");
-        setIsLogin(true);
+        const success = await register(email, password, name, withGuestData);
+        console.log("🏁 register 반환값:", success)
+        if (success) {
+          await useItemStore.getState().fetchAllItems();
+          alert("회원가입 및 로그인 완료! 메인 페이지로 이동합니다.");
+          navigate('/')
+        } else {
+          alert("회원가입 성공! 로그인 해주세요.");
+          setIsLogin(true);
+          navigate("/auth");
+        }
         return;
       }
 
@@ -36,7 +56,6 @@ export default function AuthPage() {
       if (rememberMe) localStorage.setItem("savedEmail", email);
       else localStorage.removeItem("savedEmail");
 
-      navigate("/");
     } catch (error: unknown) {
       if (error instanceof Error) {
         alert(`오류 발생: ${error.message}`);
@@ -90,7 +109,7 @@ export default function AuthPage() {
             />
           </div>
 
-          {/* {!isLogin && (
+          {!isLogin && (
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -102,7 +121,7 @@ export default function AuthPage() {
                 기존 게스트 데이터 이어받기
               </label>
             </div>
-          )} */}
+          )}
 
           {isLogin && (
             <div className="flex items-center">

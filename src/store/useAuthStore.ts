@@ -4,7 +4,7 @@ import { fetchCurrentUser } from "../api/auth/fetch-current-user";
 import { fetchLogout } from "../api/auth/fetch-logout";
 import { fetchLogin } from "../api/auth/fetch-login";
 import { fetchRegister } from "@/api/auth/fetch-register";
-
+import { useItemStore } from "./useItemStore";
 
 type AuthStatus = "checking" | "guest" | "authenticated";
 
@@ -22,11 +22,15 @@ interface AuthState {
 
   // methods
   loadUser: () => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    password: string,
+    name: string,
+    withGuestData: boolean
+  ) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<string>;
   logout: () => Promise<void>;
 }
-
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -41,31 +45,58 @@ export const useAuthStore = create<AuthState>()(
 
       loadUser: async () => {
         try {
-          const user = await fetchCurrentUser({silent: true});
+          const user = await fetchCurrentUser({ silent: true });
+          console.log("👤 [LAYOUT MOUNT] fetchCurrentUser:", user);
           set({ user, status: "authenticated" });
         } catch (err) {
-          console.log("세션 없음 (게스트):", err);
+          console.log("[LAYOUT MOUNT] 세션 없음:", err);
           set({ user: null, status: "guest" });
         }
       },
 
-      register: async (email, password, name) => {
+      register: async (email, password, name, withGuestData) => {
         try {
+          console.log("🔵 register 시작", { email, withGuestData });
           await fetchRegister(email, password, name);
-          // 회원가입 후 바로 로그인하거나, 회원가입 완료 알림만 띄우고 끝낼 수 있음
+          console.log("✅ fetchRegister 완료");
+      
+          if (!withGuestData) {
+            console.log("🟡 withGuestData: false → 회원가입만 진행 후 끝");
+            return false;
+          }
+      
+          const loginUser = await useAuthStore.getState().login(email, password);
+          console.log("✅ login 결과:", loginUser);
+      
+          if (!loginUser) {
+            console.error("❌ 로그인 실패 → 강제 종료");
+            return false;
+          }
+      
+          const bulkResult = await useItemStore.getState().bulkCreateFromLocalItems();
+          console.log("✅ bulkCreateFromLocalItems 결과:", bulkResult);
+      
+          const clearResult = await useItemStore.getState().clearLocalItems();
+          console.log("✅ clearLocalItems 결과:", clearResult);
+      
+          return true;
         } catch (err) {
-          console.error("❌ 회원가입 실패:", err);
-          throw err; // 실패를 컴포넌트에 전달
+          console.error("❌ register 실패:", err);
+          return false;
         }
       },
+      
+      
 
       login: async (email, password) => {
         try {
           await fetchLogin(email, password); // 세션 생성
-          const user = await fetchCurrentUser({silent: false}); // 유저 정보 요청
+          const user = await fetchCurrentUser({ silent: false }); // 유저 정보 요청
+          console.log("👤 [LOGIN FLOW] fetchCurrentUser:", user);
           set({ user, status: "authenticated" });
+          return user
         } catch (err) {
-          console.error("❌ 로그인 실패:", err);
+          console.error("[LOGIN FLOW] 로그인 실패:", err);
           // 로그인 실패해도 상태를 guest로 명시적으로 설정
           set({ user: null, status: "guest" });
         }

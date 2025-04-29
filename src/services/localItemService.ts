@@ -9,7 +9,7 @@ const saveItemsToLocal = (items: Item[]) => {
   localStorage.setItem("items", JSON.stringify(items));
 };
 
-export const localItemService: itemService = {
+export const localItemService: itemService & { clear?: () => Promise<void> } = {
   fetchAll: async () => {
     return getItemsFromLocal();
   },
@@ -36,5 +36,10 @@ export const localItemService: itemService = {
     );
     saveItemsToLocal(updated);
     return updated;
+  },
+
+  clear: async () => {
+    console.log("🧹 localItemService.clear() 호출");
+    localStorage.removeItem("items");
   },
 };

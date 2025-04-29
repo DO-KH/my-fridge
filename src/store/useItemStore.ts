@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { Item } from "@/types/item";
 import { getItemService } from "@/services/itemServiceSelector";
+import { localItemService } from "@/services/localItemService";
+import { dbItemService } from "@/services/dbItemService";
 
 const pendingIds = new Set<number>();
 
@@ -10,6 +12,8 @@ interface ItemStore {
   addItem: (item: Omit<Item, "id">) => Promise<void>;
   deleteItem: (id: number) => Promise<void>;
   updateItemQuantity: (id: number, newQuantity: number) => Promise<void>;
+  bulkCreateFromLocalItems: () => Promise<void>;
+  clearLocalItems: () => Promise<void>
 }
 
 export const useItemStore = create<ItemStore>((set) => ({
@@ -39,7 +43,7 @@ export const useItemStore = create<ItemStore>((set) => ({
       set((state) => ({
         items: state.items.filter((i) => i.id !== optimisticItem.id),
       }));
-      console.error("❌ 아이템 추가 실패", error);
+      console.error(" 아이템 추가 실패", error);
     }
   },
 
@@ -84,5 +88,31 @@ export const useItemStore = create<ItemStore>((set) => ({
     } finally {
       pendingIds.delete(id);
     }
+  },
+
+  bulkCreateFromLocalItems: async () => {
+    console.log("🚀 bulkCreateFromLocalItems 시작");
+    const guestItems = await localItemService.fetchAll();
+    console.log("🛒 게스트 아이템:", guestItems);
+
+    if (guestItems.length > 0 && dbItemService.bulkCreate) {
+      await dbItemService.bulkCreate(
+        guestItems.map(({ id, ...rest }) => {
+          void id;
+          return rest;
+        })
+      );
+    }
+    console.log("✅ bulkCreateFromLocalItems 완료");
+  },
+
+  clearLocalItems: async () => {
+    console.log("🧹 clearLocalItems() 실행");
+    if (localItemService.clear) {
+      await localItemService.clear();
+      console.log("✅ localStorage.clear() 완료");
+    }
+    useItemStore.setState({ items: [] });
+    console.log("✅ clearLocalItems 완료");
   },
 }));
