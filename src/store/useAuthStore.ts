@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       loadUser: async () => {
         try {
           const user = await fetchCurrentUser({ silent: true });
-          console.log("👤 [LAYOUT MOUNT] fetchCurrentUser:", user);
+          
           set({ user, status: "authenticated" });
         } catch (err) {
           console.log("[LAYOUT MOUNT] 세션 없음:", err);
@@ -56,32 +56,25 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (email, password, name, withGuestData) => {
         try {
-          console.log("🔵 register 시작", { email, withGuestData });
+          // 회원가입 요청
           await fetchRegister(email, password, name);
-          console.log("✅ fetchRegister 완료");
-      
-          if (!withGuestData) {
-            console.log("🟡 withGuestData: false → 회원가입만 진행 후 끝");
-            return false;
-          }
-      
+          // 데이터 이전을 원하지 않는 경우
+          if (!withGuestData) return false;
+          // dbItemService 접근을 위해 로그인
           const loginUser = await useAuthStore.getState().login(email, password);
-          console.log("✅ login 결과:", loginUser);
-      
           if (!loginUser) {
-            console.error("❌ 로그인 실패 → 강제 종료");
+            console.error("로그인 실패");
             return false;
           }
-      
+          // 로컬 -> DB 데이터 이전 요청
           const bulkResult = await useItemStore.getState().bulkCreateFromLocalItems();
-          console.log("✅ bulkCreateFromLocalItems 결과:", bulkResult);
-      
+          console.log("데이터 이전 결과:", bulkResult);
+          // 로컬 스토리지 비우기
           const clearResult = await useItemStore.getState().clearLocalItems();
-          console.log("✅ clearLocalItems 결과:", clearResult);
-      
+          console.log("로컬 데이터 클리어 결과:", clearResult);
           return true;
         } catch (err) {
-          console.error("❌ register 실패:", err);
+          console.error("register 실패:", err);
           return false;
         }
       },
@@ -92,7 +85,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           await fetchLogin(email, password); // 세션 생성
           const user = await fetchCurrentUser({ silent: false }); // 유저 정보 요청
-          console.log("👤 [LOGIN FLOW] fetchCurrentUser:", user);
+          console.log("[LOGIN FLOW] fetchCurrentUser:", user);
           set({ user, status: "authenticated" });
           return user
         } catch (err) {

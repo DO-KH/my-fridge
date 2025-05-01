@@ -20,12 +20,6 @@ export default function AuthPage() {
     if (saved) setEmail(saved);
   }, []);
 
-  // useEffect(() => {
-  //   if (status === "authenticated") {
-  //     navigate("/");
-  //   }
-  // }, [status, navigate]);
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -39,7 +33,6 @@ export default function AuthPage() {
         }
       } else {
         const success = await register(email, password, name, withGuestData);
-        console.log("🏁 register 반환값:", success)
         if (success) {
           await useItemStore.getState().fetchAllItems();
           alert("회원가입 및 로그인 완료! 메인 페이지로 이동합니다.");

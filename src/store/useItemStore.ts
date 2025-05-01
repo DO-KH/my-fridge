@@ -83,7 +83,7 @@ export const useItemStore = create<ItemStore>((set) => ({
       const updatedItems = await getItemService().updateQuantity(id, newQuantity);
       set({ items: updatedItems });
     } catch (error) {
-      console.error("❌ 수량 업데이트 실패", error);
+      console.error("수량 업데이트 실패", error);
       set({ items: previousItems });
     } finally {
       pendingIds.delete(id);
@@ -91,9 +91,9 @@ export const useItemStore = create<ItemStore>((set) => ({
   },
 
   bulkCreateFromLocalItems: async () => {
-    console.log("🚀 bulkCreateFromLocalItems 시작");
+    console.log("bulkCreateFromLocalItems 시작");
     const guestItems = await localItemService.fetchAll();
-    console.log("🛒 게스트 아이템:", guestItems);
+    console.log("게스트 아이템:", guestItems);
 
     if (guestItems.length > 0 && dbItemService.bulkCreate) {
       await dbItemService.bulkCreate(
@@ -103,16 +103,16 @@ export const useItemStore = create<ItemStore>((set) => ({
         })
       );
     }
-    console.log("✅ bulkCreateFromLocalItems 완료");
+    console.log("bulkCreateFromLocalItems 완료");
   },
 
   clearLocalItems: async () => {
-    console.log("🧹 clearLocalItems() 실행");
+    console.log("clearLocalItems() 실행");
     if (localItemService.clear) {
       await localItemService.clear();
-      console.log("✅ localStorage.clear() 완료");
+      console.log("localStorage.clear() 완료");
     }
     useItemStore.setState({ items: [] });
-    console.log("✅ clearLocalItems 완료");
+    console.log("clearLocalItems 완료");
   },
 }));

@@ -39,7 +39,7 @@ export const localItemService: itemService & { clear?: () => Promise<void> } = {
   },
 
   clear: async () => {
-    console.log("🧹 localItemService.clear() 호출");
+    console.log("localItemService.clear() 호출");
     localStorage.removeItem("items");
   },
 };

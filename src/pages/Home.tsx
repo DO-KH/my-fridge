@@ -22,7 +22,7 @@ export default function Home() {
         const expiryDate = new Date(item.expiryDate);
         const daysLeft =
           (expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-        return daysLeft > 0 && daysLeft <= 3;
+        return daysLeft > 0 && daysLeft <= 3; // 0~3일인 식재료 반환
       }),
     [items, today]
   );
@@ -32,7 +32,7 @@ export default function Home() {
       items.filter((item) => {
         if (!item.expiryDate) return false;
         const expiryDate = new Date(item.expiryDate);
-        return expiryDate.getTime() < today.getTime();
+        return expiryDate.getTime() < today.getTime();  // 오늘날짜(유통기한)보다 과거인 식재료만 반환
       }),
     [items, today]
   );
@@ -45,7 +45,7 @@ export default function Home() {
             new Date(b.receivingDate).getTime() -
             new Date(a.receivingDate).getTime()
         )
-        .slice(0, 5),
+        .slice(0, 5), // 최대 5개 까지만 보여줌
     [items]
   );
   
